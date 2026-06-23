@@ -10,6 +10,10 @@ observer can see — the domains you look up, the destinations you connect to,
 and the shape/volume/timing of your traffic — by burying your real activity in
 a crowd of plausible decoys.
 
+<img width="246" height="217" alt="image" src="https://github.com/user-attachments/assets/7d346a13-e890-4b81-b4ed-7021a6daf4b7" />
+
+
+
 ## What it does and doesn't do
 
 | Threat | Status |
