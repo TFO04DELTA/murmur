@@ -1,0 +1,24 @@
+{
+  "resolver": "auto",
+  "dashboard_port": 8787,
+  "data_dir": "/var/lib/murmur",
+  "concurrency": 3,
+  "impersonate": ["chrome", "chrome131", "edge", "safari"],
+  "dns_layer": { "enabled": true, "base_qpm": 18 },
+  "browser_layer": {
+    "enabled": true,
+    "active_start": 7,
+    "active_end": 23,
+    "session_gap_seconds": [25, 95],
+    "links_per_session": [1, 3],
+    "dwell_seconds": [2, 7],
+    "asset_sample": 0.5,
+    "max_assets": 25,
+    "timeout": 12
+  },
+  "ipv6": false,
+  "bandwidth": { "monthly_cap_gb": 1200, "throttle_at_pct": 90 },
+  "rhythm": { "overnight_floor": 0.12 },
+  "retention_days": 3,
+  "ttl_hardening": false
+}

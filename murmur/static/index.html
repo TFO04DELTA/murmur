@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Murmur — privacy console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A1316;--bg-2:#0D1B21;--panel:#112730;--panel-2:#16333D;
+    --hair:rgba(126,166,176,.13);--hair-strong:rgba(126,166,176,.24);
+    --signal:#F2B33E;--signal-soft:rgba(242,179,62,.14);
+    --noise:#43D0C6;--noise-soft:rgba(67,208,198,.12);
+    --warn:#E7B65C;--bad:#E78A6B;
+    --text:#DEEAEC;--muted:#7C969D;--muted-2:#5A737A;
+    --display:'Space Grotesk',sans-serif;--body:'Inter',sans-serif;--mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box}html,body{margin:0}
+  body{background:radial-gradient(1100px 560px at 82% -12%,rgba(67,208,198,.07),transparent 58%),radial-gradient(900px 520px at -5% 112%,rgba(242,179,62,.055),transparent 55%),var(--bg);color:var(--text);font-family:var(--body);-webkit-font-smoothing:antialiased;line-height:1.45;padding:24px}
+  .wrap{max-width:1200px;margin:0 auto}
+  .topbar{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:22px}
+  .brand{display:flex;align-items:baseline;gap:11px}
+  .brand-mark{font-family:var(--display);font-weight:700;font-size:27px;letter-spacing:-.5px}
+  .brand-mark .dot{color:var(--noise)}
+  .brand-sub{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
+  .topbar-spacer{flex:1}
+  .uptime{font-family:var(--mono);font-size:12px;color:var(--muted)}.uptime b{color:var(--text);font-weight:500}
+  .statepill{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:.6px;padding:7px 13px;border-radius:999px;border:1px solid var(--hair-strong);background:var(--panel);color:var(--noise)}
+  .statepill .led{width:8px;height:8px;border-radius:50%;background:var(--noise);animation:pulse 2.4s infinite}
+  body.paused .statepill{color:var(--muted)}body.paused .statepill .led{background:var(--muted-2);animation:none}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(67,208,198,.45)}70%{box-shadow:0 0 0 7px rgba(67,208,198,0)}100%{box-shadow:0 0 0 0 rgba(67,208,198,0)}}
+  .btn{appearance:none;border:1px solid var(--hair-strong);background:var(--panel);color:var(--text);font-family:var(--mono);font-size:12px;font-weight:500;padding:8px 15px;border-radius:8px;cursor:pointer;transition:border-color .15s,color .15s}
+  .btn:hover{border-color:var(--noise)}.btn:focus-visible{outline:2px solid var(--noise);outline-offset:2px}
+  .grid{display:grid;gap:16px}
+  .card{background:var(--panel);border:1px solid var(--hair);border-radius:14px;padding:18px 20px}
+  .card-h{font-family:var(--display);font-weight:600;font-size:15px;margin:0 0 3px}
+  .card-note{font-size:12.5px;color:var(--muted);margin:0 0 15px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+  .hero{grid-template-columns:248px 1fr;margin-bottom:16px;align-items:stretch}
+  @media(max-width:840px){.hero{grid-template-columns:1fr}}
+  .score-card{background:linear-gradient(165deg,var(--bg-2),var(--panel));border:1px solid var(--hair);border-radius:14px;padding:22px;display:flex;flex-direction:column;justify-content:center}
+  .score-card .n{font-family:var(--display);font-weight:700;font-size:74px;line-height:.9;letter-spacing:-2px;margin:6px 0 0}
+  .score-card .of{font-family:var(--mono);font-size:12px;color:var(--muted-2);margin-top:2px}
+  .score-card .lab{font-family:var(--display);font-weight:600;font-size:18px;margin-top:18px}
+  .score-card .verd{font-size:12.5px;color:var(--muted);margin-top:6px}
+  .swarm-card{position:relative;background:linear-gradient(180deg,var(--bg-2),var(--panel));border:1px solid var(--hair);border-radius:14px;padding:16px 18px 12px;overflow:hidden;display:flex;flex-direction:column}
+  .swarm-top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;z-index:2;position:relative}
+  .swarm-top h2{font-family:var(--display);font-weight:600;font-size:14px;margin:0}.swarm-top .grow{flex:1}
+  .swarm-legend{font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;gap:14px}
+  .swarm-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+  .swarm-legend .ir{background:var(--signal)}.swarm-legend .id{background:var(--noise)}
+  .canvas-wrap{position:relative;flex:1;min-height:230px;margin-top:6px}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .sep-read{position:absolute;left:0;bottom:8px;font-family:var(--mono);font-size:12px;color:var(--muted);z-index:2}.sep-read b{color:var(--text);font-weight:500}
+  .swarm-cap{font-size:12px;color:var(--muted-2);margin:8px 2px 2px;z-index:2;position:relative}
+  .bd{margin-bottom:16px}
+  .bd-section{font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:4px 0 2px}
+  .bd-section.handled{margin-top:18px}
+  .factor{display:flex;align-items:flex-start;gap:13px;padding:13px 0;border-top:1px solid var(--hair)}.factor.first{border-top:none}
+  .factor .ic{width:22px;height:22px;border-radius:6px;flex:0 0 auto;display:grid;place-items:center;font-size:13px;font-weight:700;margin-top:1px}
+  .ic.good{background:rgba(67,208,198,.16);color:var(--noise)}.ic.warn{background:rgba(231,182,92,.16);color:var(--warn)}.ic.fix{background:rgba(231,138,107,.16);color:var(--bad)}
+  .factor .ft{flex:1;min-width:0}.factor .fn{font-size:13.5px;font-weight:600}.factor .fd{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .factor .side{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+  .factor .pts{font-family:var(--mono);font-size:12px;color:var(--muted-2)}.factor .pts b{color:var(--noise)}
+  .fix-btn{appearance:none;border:1px solid rgba(231,138,107,.45);background:rgba(231,138,107,.1);color:var(--bad);font-family:var(--mono);font-size:11.5px;padding:6px 11px;border-radius:7px;cursor:pointer;white-space:nowrap;transition:filter .15s}
+  .fix-btn.opt{border-color:var(--hair-strong);background:var(--panel-2);color:var(--muted)}
+  .fix-btn:hover{filter:brightness(1.15)}.fix-btn:disabled{opacity:.5;cursor:default}
+  #allclear{font-size:13px;color:var(--noise);padding:10px 0 2px;display:none}
+  .two{grid-template-columns:1.35fr .65fr;margin-bottom:16px;align-items:start}
+  @media(max-width:840px){.two{grid-template-columns:1fr}}
+  .cat{display:flex;align-items:center;gap:12px;margin-bottom:11px;font-size:13px}
+  .cat .name{width:108px;flex:0 0 auto}
+  .cat .bar{flex:1;height:7px;border-radius:4px;background:var(--panel-2);overflow:hidden}
+  .cat .bar span{display:block;height:100%;background:linear-gradient(90deg,var(--noise),rgba(67,208,198,.45));border-radius:4px;width:0;transition:width .8s}
+  .cat .pct{width:38px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .tm{display:flex;align-items:flex-start;gap:11px;padding:12px 0;border-top:1px solid var(--hair)}.tm.first{border-top:none}
+  .tm .tdot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;margin-top:4px}
+  .tm.ok .tdot{background:var(--noise)}.tm.partial .tdot{background:var(--warn)}.tm.none .tdot{background:var(--muted-2)}
+  .tm .th{font-size:13px;font-weight:600}.tm .tb{font-size:12px;color:var(--muted);margin-top:1px}
+  .tm .tstat{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.4px;text-transform:uppercase;flex:0 0 auto;padding-top:2px}
+  .tm.ok .tstat{color:var(--noise)}.tm.partial .tstat{color:var(--warn)}.tm.none .tstat{color:var(--muted-2)}
+  .strip{display:flex;align-items:center;background:var(--panel);border:1px solid var(--hair);border-radius:14px;overflow:hidden;flex-wrap:wrap}
+  .strip .cell{padding:14px 20px;border-right:1px solid var(--hair);flex:0 0 auto}
+  .strip .cell.flex{flex:1;min-width:240px;border-right:none}
+  .strip .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .strip .v{font-family:var(--display);font-weight:600;font-size:22px;letter-spacing:-.5px}.strip .v small{font-size:12px;color:var(--muted);font-family:var(--mono)}
+  .ticker{font-family:var(--mono);font-size:12.5px;color:var(--muted);height:20px;overflow:hidden}.ticker b{color:var(--text);font-weight:500}
+  .foot{text-align:center;font-family:var(--mono);font-size:11px;color:var(--muted-2);margin-top:16px}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><span class="brand-mark">Murmur<span class="dot">.</span></span><span class="brand-sub">privacy console</span></div>
+    <div class="topbar-spacer"></div>
+    <span class="uptime">resolver <b id="resolver">—</b> · up <b id="uptime">—</b></span>
+    <span class="statepill"><span class="led"></span><span id="stateword">—</span></span>
+    <button class="btn" id="pauseBtn">Pause</button>
+  </div>
+
+  <section class="grid hero">
+    <div class="score-card">
+      <div class="eyebrow">Blend Score</div>
+      <div class="n" id="scoreNum">—</div><div class="of">/ 100</div>
+      <div class="lab" id="scoreLabel">—</div>
+      <div class="verd" id="scoreVerdict">How hard it is to pick your real device out of the noise.</div>
+    </div>
+    <div class="swarm-card">
+      <div class="swarm-top"><h2>Can an observer separate you?</h2><span class="grow"></span>
+        <span class="swarm-legend"><span><i class="ir"></i>your real flows</span><span><i class="id"></i>decoy flows</span></span></div>
+      <div class="canvas-wrap"><canvas id="swarm"></canvas><div class="sep-read">real flows <b id="sepPct">—</b> separable</div></div>
+      <p class="swarm-cap">Each dot is a network flow your ISP sees. The coral ring is an analyst's lasso around your device — fix the tells below and your flows scatter until no lasso fits. (Real-flow dots are illustrative; this node can't see your other devices.)</p>
+    </div>
+  </section>
+
+  <section class="card bd">
+    <h2 class="card-h">What an observer could use against you</h2>
+    <p class="card-note">Each item is computed live from this node. Handle the flagged ones — the fixes are real and apply on the Pi.</p>
+    <div class="bd-section" id="lbl-attn">Needs attention</div>
+    <div id="attn"></div>
+    <div id="allclear">Every separable tell on this node is handled.</div>
+    <div class="bd-section handled" id="lbl-handled">Handled</div>
+    <div id="handled"></div>
+  </section>
+
+  <section class="grid two">
+    <div class="card">
+      <h2 class="card-h">Decoy traffic mix · today</h2>
+      <p class="card-note">The category spread of the noise this node is actually generating, weighted to look like a household.</p>
+      <div id="cats"></div>
+    </div>
+    <div class="card">
+      <h2 class="card-h">What Murmur covers</h2>
+      <p class="card-note">Honest scope — green is defended, grey is out of reach from a network box.</p>
+      <div class="tm ok first"><span class="tdot"></span><div><div class="th">ISP &amp; broker profiling</div><div class="tb">Your interest profile is buried in decoys.</div></div><span class="tstat">disrupted</span></div>
+      <div class="tm partial"><span class="tdot"></span><div><div class="th">Targeted attacker on the ISP</div><div class="tb">Un-mixing is expensive, not impossible.</div></div><span class="tstat">hardened</span></div>
+      <div class="tm none"><span class="tdot"></span><div><div class="th">Account-level tracking</div><div class="tb">Google / Meta tie to your login. Future phase.</div></div><span class="tstat">not covered</span></div>
+      <div class="tm none"><span class="tdot"></span><div><div class="th">Anonymity</div><div class="tb">Hides what, not who. VPN/Tor for that.</div></div><span class="tstat">not covered</span></div>
+    </div>
+  </section>
+
+  <section class="strip">
+    <div class="cell"><div class="k">Decoy requests today</div><div class="v" id="reqv">—</div></div>
+    <div class="cell"><div class="k">Bandwidth · month</div><div class="v"><span id="bwv">—</span><small id="capv"> / —</small></div></div>
+    <div class="cell flex"><div class="k">Live activity</div><div class="ticker" id="ticker"></div></div>
+  </section>
+
+  <div class="foot">live · reading this node's real metrics · refreshes every 4s</div>
+</div>
+
+<script>
+(function(){
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var BASE=20;
+  function band(s){
+    if(s>=92)return['Excellent','Your flows are scattered through the noise — no lasso fits your device.','var(--noise)'];
+    if(s>=75)return['Strong','Hard to separate. A casual observer loses; a targeted one has to work.','var(--noise)'];
+    if(s>=55)return['Decent, with gaps','Bulk profiling is beaten, but a careful analyst could still un-mix you.','var(--warn)'];
+    return['Weak','Your real traffic is separable. Apply the fixes below.','var(--bad)'];
+  }
+  function sepForScore(s){return Math.max(0.05,Math.min(0.85,1-(s-40)/62));}
+
+  /* ---- swarm canvas ---- */
+  var cv=document.getElementById('swarm'),ctx=cv.getContext('2d'),dpr=Math.max(1,window.devicePixelRatio||1);
+  var W=0,Hc=0,dots=[],sep=0.55,center={x:0,y:0},running=true;
+  var cSig=getComputedStyle(document.documentElement).getPropertyValue('--signal').trim();
+  function rand(a,b){return a+Math.random()*(b-a);}
+  function resize(){var r=cv.parentElement.getBoundingClientRect();W=r.width;Hc=r.height;cv.width=W*dpr;cv.height=Hc*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);layout();}
+  function build(){dots=[];
+    for(var i=0;i<118;i++)dots.push({real:false,u:rand(.04,.96),v:rand(.06,.94),x:0,y:0,ph:Math.random()*6.28,fr:rand(.4,1.1),am:rand(2,5)});
+    for(var j=0;j<20;j++)dots.push({real:true,disp:{x:Math.random(),y:Math.random()},home:{x:rand(.62,.9),y:rand(.55,.85)},x:0,y:0,ph:Math.random()*6.28,fr:rand(.4,1),am:rand(2,4)});}
+  function layout(){dots.forEach(function(d){if(!d.real){d.tx=d.u*W;d.ty=d.v*Hc;}});placeReal();}
+  function placeReal(){var sx=0,sy=0,n=0;dots.forEach(function(d){if(d.real){var ux=d.disp.x*(1-sep)+d.home.x*sep,uy=d.disp.y*(1-sep)+d.home.y*sep;d.tx=(.05+ux*.9)*W;d.ty=(.06+uy*.88)*Hc;sx+=d.tx;sy+=d.ty;n++;}});center.x=sx/Math.max(1,n);center.y=sy/Math.max(1,n);}
+  function setSep(v){sep=v;placeReal();document.getElementById('sepPct').textContent=Math.round(sep*100)+'%';}
+  var t=0;
+  function frame(){t+=16;ctx.clearRect(0,0,W,Hc);
+    var sway=running?Math.sin(t*.0003)*5:0,sway2=running?Math.cos(t*.00042)*4:0;
+    if(sep>.12){var spread=0;dots.forEach(function(d){if(d.real){var dx=d.x-center.x,dy=d.y-center.y;spread+=Math.sqrt(dx*dx+dy*dy);}});spread=Math.max(34,spread/20);
+      ctx.save();ctx.setLineDash([5,6]);ctx.lineWidth=1.4;ctx.strokeStyle='rgba(231,138,107,'+(.5*Math.min(1,(sep-.12)/.5))+')';
+      ctx.beginPath();ctx.ellipse(center.x,center.y,spread*1.15,spread*.92,0,0,6.2832);ctx.stroke();ctx.restore();}
+    dots.forEach(function(d){var wob=running?Math.sin(t*.001*d.fr+d.ph)*d.am:0,wob2=running?Math.cos(t*.0012*d.fr+d.ph)*d.am:0;
+      d.x+=((d.tx+sway+wob)-d.x)*.07;d.y+=((d.ty+sway2+wob2)-d.y)*.07;ctx.beginPath();
+      if(d.real){ctx.fillStyle=cSig;ctx.shadowColor=cSig;ctx.shadowBlur=8;ctx.arc(d.x,d.y,3.1,0,6.2832);ctx.fill();ctx.shadowBlur=0;}
+      else{ctx.fillStyle='rgba(67,208,198,0.5)';ctx.arc(d.x,d.y,2.1,0,6.2832);ctx.fill();}});
+    requestAnimationFrame(frame);}
+
+  /* ---- render from state ---- */
+  var icon={good:'✓',warn:'!',fix:'✕'},shown=0;
+  function setScore(s){var b=band(s);document.getElementById('scoreLabel').textContent=b[0];document.getElementById('scoreLabel').style.color=b[2];
+    document.getElementById('scoreVerdict').textContent=b[1];document.getElementById('scoreNum').style.color=b[2];setSep(sepForScore(s));
+    if(reduce){document.getElementById('scoreNum').textContent=s;shown=s;return;}
+    var from=shown,t0=null;(function step(ts){if(!t0)t0=ts;var p=Math.min((ts-t0)/600,1),e=1-Math.pow(1-p,3);
+      document.getElementById('scoreNum').textContent=Math.round(from+(s-from)*e);if(p<1)requestAnimationFrame(step);else shown=s;})();}
+
+  function renderFactors(factors){
+    var attn=factors.filter(function(f){return f.state!=='good';});
+    var done=factors.filter(function(f){return f.state==='good';});
+    var a=document.getElementById('attn');a.innerHTML='';
+    attn.forEach(function(f,i){var row=document.createElement('div');row.className='factor'+(i===0?' first':'');
+      row.innerHTML='<span class="ic '+f.state+'">'+icon[f.state]+'</span><span class="ft"><span class="fn">'+f.label+'</span><span class="fd">'+f.detail+'</span></span>';
+      var side=document.createElement('span');side.className='side';side.innerHTML='<span class="pts">+'+f.pts+' avail.</span>';
+      if(f.fix){var btn=document.createElement('button');btn.className='fix-btn'+(f.state==='warn'?' opt':'');btn.textContent=f.fix;
+        btn.onclick=function(){btn.disabled=true;btn.textContent='applying…';fetch('/api/fix/'+f.id,{method:'POST'}).then(function(r){return r.json();}).then(function(j){if(!j.ok){btn.disabled=false;btn.textContent=f.fix;alert(j.message||'could not apply');}else{refresh();}});};
+        side.appendChild(btn);}
+      row.appendChild(side);a.appendChild(row);});
+    document.getElementById('lbl-attn').style.display=attn.length?'block':'none';
+    document.getElementById('allclear').style.display=attn.length?'none':'block';
+    var h=document.getElementById('handled');h.innerHTML='';
+    done.forEach(function(f,i){var row=document.createElement('div');row.className='factor'+(i===0?' first':'');
+      row.innerHTML='<span class="ic good">✓</span><span class="ft"><span class="fn">'+f.label+'</span><span class="fd">'+f.detail+'</span></span><span class="side"><span class="pts"><b>+'+f.pts+'</b></span></span>';h.appendChild(row);});}
+
+  function renderCats(cats){var w=document.getElementById('cats');w.innerHTML='';
+    if(!cats.length){w.innerHTML='<div style="font-size:13px;color:var(--muted)">warming up — no decoy traffic logged yet today.</div>';return;}
+    cats.forEach(function(c){var row=document.createElement('div');row.className='cat';
+      row.innerHTML='<span class="name">'+c[0]+'</span><span class="bar"><span></span></span><span class="pct">'+c[1]+'%</span>';
+      w.appendChild(row);setTimeout(function(){row.querySelector('.bar span').style.width=Math.min(100,c[1]*3.2)+'%';},60);});}
+
+  function renderTicker(recent){if(!recent.length)return;var r=recent[0];
+    document.getElementById('ticker').innerHTML='<span>'+r.t+'  '+r.text+'</span>';}
+
+  function fmtBytes(b){var gb=b/1e9;return gb>=1?gb.toFixed(1):(b/1e6).toFixed(0)/1000;}
+  function setStrip(st){
+    document.getElementById('reqv').textContent=st.requests_today.toLocaleString();
+    document.getElementById('bwv').textContent=(st.bytes_month/1e9).toFixed(1);
+    document.getElementById('capv').textContent=' / '+st.cap_gb.toLocaleString()+' GB';
+    document.getElementById('resolver').textContent=st.resolver||'—';
+    var h=Math.floor(st.uptime_s/3600),m=Math.floor(st.uptime_s%3600/60);
+    document.getElementById('uptime').textContent=(h>=24?Math.floor(h/24)+'d ':'')+(h%24)+'h '+m+'m';
+    var running=st.running;running=running;
+    document.body.classList.toggle('paused',!st.running);
+    document.getElementById('stateword').textContent=st.running?'RELEASING':'PAUSED';
+    document.getElementById('pauseBtn').textContent=st.running?'Pause':'Resume';
+    window.__running=st.running;
+  }
+
+  var lastTick='';
+  function refresh(){fetch('/api/state').then(function(r){return r.json();}).then(function(st){
+    running=st.running;setScore(st.score);renderFactors(st.factors);renderCats(st.categories);setStrip(st);
+    if(st.recent&&st.recent.length&&st.recent[0].t!==lastTick){lastTick=st.recent[0].t;renderTicker(st.recent);}
+  }).catch(function(){});}
+
+  document.getElementById('pauseBtn').addEventListener('click',function(){fetch('/api/pause',{method:'POST'}).then(refresh);});
+
+  build();resize();window.addEventListener('resize',resize);dots.forEach(function(d){d.x=d.tx;d.y=d.ty;});
+  requestAnimationFrame(frame);refresh();setInterval(refresh,4000);
+})();
+</script>
+</body>
+</html>

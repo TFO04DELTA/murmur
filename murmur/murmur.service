@@ -1,0 +1,19 @@
+[Unit]
+Description=Murmur decoy traffic generator
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=murmur
+Group=murmur
+Environment=MURMUR_CONFIG=/etc/murmur/config.json
+ExecStart=/opt/murmur/venv/bin/python /opt/murmur/murmur.py
+Restart=always
+RestartSec=5
+# light footprint guardrails for the Zero's 512 MB
+MemoryMax=320M
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,12 @@
+{
+  "news": ["bbc.com", "reuters.com", "apnews.com", "npr.org", "theguardian.com", "aljazeera.com", "cnbc.com", "bloomberg.com", "axios.com", "pbs.org", "time.com", "theverge.com"],
+  "shopping": ["amazon.com", "etsy.com", "target.com", "walmart.com", "ebay.com", "ikea.com", "wayfair.com", "rei.com", "homedepot.com", "bestbuy.com", "chewy.com"],
+  "streaming": ["youtube.com", "twitch.tv", "vimeo.com", "soundcloud.com", "bandcamp.com", "pbs.org", "ted.com", "archive.org"],
+  "social": ["reddit.com", "stackexchange.com", "stackoverflow.com", "quora.com", "news.ycombinator.com", "github.com", "goodreads.com", "letterboxd.com"],
+  "reference": ["wikipedia.org", "britannica.com", "merriam-webster.com", "wolframalpha.com", "nih.gov", "nasa.gov", "noaa.gov", "khanacademy.org", "mdn.io", "weather.com"],
+  "sports": ["espn.com", "bbc.com", "cbssports.com", "skysports.com", "nba.com", "mlb.com", "formula1.com", "olympics.com"],
+  "travel": ["wikitravel.org", "tripadvisor.com", "lonelyplanet.com", "rome2rio.com", "seatguru.com", "skyscanner.net", "nationalgeographic.com", "atlasobscura.com"],
+  "food": ["allrecipes.com", "seriouseats.com", "bonappetit.com", "epicurious.com", "foodnetwork.com", "kingarthurbaking.com", "thekitchn.com", "budgetbytes.com"],
+  "tech": ["arstechnica.com", "wired.com", "techcrunch.com", "engadget.com", "tomshardware.com", "howtogeek.com", "raspberrypi.com", "python.org"],
+  "finance": ["investopedia.com", "morningstar.com", "marketwatch.com", "nerdwallet.com", "fool.com", "sec.gov", "irs.gov"]
+}
