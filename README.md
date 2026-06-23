@@ -40,7 +40,7 @@ what the ISP can actually see through the encryption.
 - Raspberry Pi Zero 2 W (or anything better)
 - **64-bit Raspberry Pi OS Lite** (Bookworm) — gives you prebuilt `curl_cffi`
   wheels so install is fast and needs no compiler
-- Wired or Wi-Fi connection to your GL.iNet router; the Pi just needs to be a
+- Wired or Wi-Fi connection to your router; the Pi just needs to be a
   normal LAN client that uses the router's Pi-hole for DNS (the default)
 
 ## Install
