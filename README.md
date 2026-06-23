@@ -1,7 +1,7 @@
 # Murmur
 
-Decoy traffic generator for a Raspberry Pi Zero 2 W. Plug it into your GL.iNet
-router (which already runs Pi-hole) and it quietly emits plausible decoy
+Decoy traffic generator for a Raspberry Pi Zero 2 W. Plug it into your
+router (preferably which already runs Pi-hole) and it quietly emits plausible decoy
 traffic so your ISP and the data brokers buying their logs can't cleanly
 profile what your household is actually interested in.
 
